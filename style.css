@@ -1,18 +1,124 @@
+/* Global Page Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #e6eef5;
+}
+
+/* Center full container */
 #mainContainer {
-  display: flex;
-  justify-content: center;
-  font-family: "Times New Roman", Times, serif;
+    display: flex;
+    justify-content: center;
 }
 
 #container {
-  width: 1330px;
-  min-height: 800px;
-  display: flex;
-  flex-direction: column;
-  background: url("./images/background.jpg") no-repeat;
-  background-size: cover;
-  padding: 20px 25px 30px;
-  box-sizing: border-box;
+    width: 100%;
+    min-height: 100vh;
+    background: url("./images/background.jpg") no-repeat center center fixed;
+    /*background-size: 95% auto;*/
+    background-size: contain;      /* ← change this */
+    background-repeat: no-repeat;
+    background-position: center top;
+    padding: 30px;
+    box-sizing: border-box;
 }
 
-/* Add CSS here */
+/* ROW OF PANELS */
+#panelRow {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 20px;
+}
+
+/* Panel Styling */
+.panel {
+    background: white;
+    padding: 20px;
+    flex: 1;
+    border-radius: 8px;
+    box-shadow: 0px 0px 8px rgba(0,0,0,0.1);
+    min-height: 550px;
+    margin-top: 80px;
+}
+
+/* Inputs */
+.inputBox {
+    width: 90%;
+    padding: 7px;
+    border-radius: 6px;
+    border: 1px solid #888;
+}
+
+/* Buttons */
+.button {
+    padding: 8px 16px;
+    margin-top: 10px;
+    background: #0066ff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.resetBtn {
+    background: #ff4d4d;
+}
+
+.button:hover {
+    opacity: 0.9;
+}
+
+/* Coin Display */
+.coin-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.coin {
+    padding: 8px 14px;
+    background: #ddd;
+    border-radius: 6px;
+    border: 1px solid #888;
+}
+
+.highlight {
+    background: #4CAF50 !important;
+    color: white;
+}
+
+/* Selected Coins */
+#selectedCoins {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 60px;
+    padding: 10px;
+    border: 1px dashed #aaa;
+    margin-top: 10px;
+}
+
+/* Remaining Amount */
+#remainingAmount {
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Summary Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+table th, table td {
+    border: 1px solid #666;
+    padding: 6px;
+}
+
+table th {
+    background: #f2f2f2;
+}

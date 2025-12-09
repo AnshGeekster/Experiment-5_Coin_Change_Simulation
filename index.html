@@ -7,14 +7,56 @@
     <title>Coin Change Problem</title>
   </head>
   <body>
+
     <div id="mainContainer">
         <div id="container">
 
-            
+            <!-- FLEX ROW FOR 3 PANELS -->
+            <div id="panelRow">
 
+                <!-- LEFT PANEL -->
+                <div class="panel">
+                    <h3>Input</h3>
+
+                    <label>Enter Amount (M):</label><br>
+                    <input type="number" id="amount" value="786" class="inputBox"><br><br>
+
+                    <label>Denominations (comma separated):</label><br>
+                    <input type="text" id="denoms" value="1,2,5,10,20,50,100,200,500,2000" class="inputBox"><br><br>
+
+                    <button class="button" onclick="startSimulation()">Start Simulation</button>
+                    <button class="button resetBtn" onclick="resetAll()">Reset</button>
+                </div>
+
+                <!-- CENTER PANEL -->
+                <div class="panel">
+                    <h3>Processing Panel</h3>
+
+                    <div id="remainingAmount">Remaining Amount: --</div>
+
+                    <h4>Available Coins:</h4>
+                    <div class="coin-box" id="coinBox"></div>
+
+                    <button class="button" id="nextBtn" onclick="nextStep()" disabled>Next Step</button>
+                    <button class="button" id="autoBtn" onclick="autoRun()" disabled>Auto Run</button>
+                </div>
+
+                <!-- RIGHT PANEL -->
+                <div class="panel">
+                    <h3>Output</h3>
+
+                    <b>Coins Used:</b>
+                    <div id="selectedCoins"></div>
+
+                    <h4>Summary:</h4>
+                    <div id="summary"></div>
+                </div>
+
+            </div> <!-- end flex row -->
         </div>
     </div>
 
     <script src="script.js"></script>
+
   </body>
 </html>
