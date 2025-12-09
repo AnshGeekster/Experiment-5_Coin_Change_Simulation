@@ -11,6 +11,18 @@ body {
     justify-content: center;
 }
 
+.main-title {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 32px;
+    font-weight: 700;
+    text-align: center;
+    z-index: 1000;   /* ensures it stays above panels */
+}
+
+
 #container {
     width: 100%;
     min-height: 100vh;
