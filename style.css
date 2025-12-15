@@ -1,8 +1,25 @@
+/* Pseudocode styling */
 /* Global Page Styling */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 body {
     font-family: Arial, sans-serif;
-    margin: 0;
-    background: #e6eef5;
+    font-size: 14px;
+    /* no global background here (only on index) */
+}
+
+/* index-specific background */
+body.with-bg {
+    background: url("./images/background.jpg") no-repeat center center fixed;
+    background-size: cover; /* preserve aspect ratio and fill screen */
+}
+
+/* Prevent page scroll on advanced page while letting panels scroll internally */
+body.advanced {
+    overflow: hidden;
 }
 
 /* Center full container */
@@ -16,7 +33,7 @@ body {
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 700;
     text-align: center;
     z-index: 1000;   /* ensures it stays above panels */
@@ -26,51 +43,117 @@ body {
 #container {
     width: 100%;
     min-height: 100vh;
-    background: url("./images/background.jpg") no-repeat center center fixed;
-    /*background-size: 95% auto;*/
-    background-size: contain;      /* ← change this */
-    background-repeat: no-repeat;
-    background-position: center top;
-    padding: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Remove duplicate background here (keeps body background only) */
+    background: transparent;
+    padding: 18px;
+    padding-top: 70px;  /* allow space for .main-title so panels don't overlap header */
     box-sizing: border-box;
+    max-width: 1400px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+/* Add .container shared by both pages (panels container) */
+.container {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+    max-width: 1200px;
 }
 
 /* ROW OF PANELS */
 #panelRow {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;   /* center panels horizontally */
     width: 100%;
-    gap: 20px;
+    gap: 24px;                  /* slightly larger gap */
+    align-items: stretch;       /* equal height panels */
+    max-width: 1200px;
 }
 
-/* Panel Styling */
+/* Panel Styling - make all panels identical size and larger, but fit viewport */
 .panel {
     background: white;
-    padding: 20px;
-    flex: 1;
-    border-radius: 8px;
-    box-shadow: 0px 0px 8px rgba(0,0,0,0.1);
-    min-height: 550px;
-    margin-top: 80px;
+    padding: 18px;
+    flex: 0 0 360px;            /* fixed width to ensure same size */
+    width: 360px;               /* ensure fixed width */
+    border-radius: 10px;
+    box-shadow: 0px 0px 12px rgba(0,0,0,0.12);
+    height: 520px;              /* fixed height so panels are identical across pages */
+    max-height: calc(100vh - 120px); /* ensure panels fit inside viewport */
+    margin: 0;                  /* remove top margin */
+    box-sizing: border-box;
+    overflow: auto;             /* enable internal scrolling if content exceeds panel */
+    position: relative;         /* for absolute-positioned elements inside panel */
+}
+
+/* Ensure advanced page panels adopt the same default size as index */
+body.advanced .panel {
+    width: 360px;
+    flex: 0 0 360px;
+    height: 520px;
+}
+
+/* Back button positioned inside the panel at the top-right corner */
+.go-back-btn {
+    position: absolute;   /* panel has position: relative; anchors this inside panel */
+    top: 8px;             /* inside the panel */
+    right: 8px;           /* inside the panel */
+    padding: 6px 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    z-index: 10;
+}
+
+/* Keep responsiveness for small screens */
+@media (max-width: 1000px) {
+    .go-back-btn {
+        top: 8px;
+        right: 8px;
+        font-size: 11px;
+        padding: 5px 8px;
+    }
 }
 
 /* Inputs */
 .inputBox {
-    width: 90%;
-    padding: 7px;
+    width: 85%;
+    padding: 6px;
     border-radius: 6px;
     border: 1px solid #888;
 }
 
 /* Buttons */
 .button {
-    padding: 8px 16px;
-    margin-top: 10px;
+    padding: 6px 12px;
+    margin-top: 8px;
     background: #0066ff;
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-size: 14px;
+    transition: background 0.15s, opacity 0.15s;
+}
+
+/* Disabled appearance */
+.button:disabled,
+.button[disabled] {
+    background: #c4c4c4;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.95;
+    box-shadow: none;
+    pointer-events: none;
 }
 
 .resetBtn {
@@ -78,22 +161,23 @@ body {
 }
 
 .button:hover {
-    opacity: 0.9;
+    opacity: 0.95;
 }
 
 /* Coin Display */
 .coin-box {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 15px;
+    gap: 8px;
+    margin-top: 10px;
 }
 
 .coin {
-    padding: 8px 14px;
+    padding: 6px 10px;
     background: #ddd;
     border-radius: 6px;
     border: 1px solid #888;
+    font-size: 14px;
 }
 
 .highlight {
@@ -105,32 +189,135 @@ body {
 #selectedCoins {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    min-height: 60px;
-    padding: 10px;
+    gap: 8px;
+    min-height: 50px;
+    padding: 8px;
     border: 1px dashed #aaa;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 /* Remaining Amount */
 #remainingAmount {
-    font-size: 20px;
+    font-size: 18px;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 /* Summary Table */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 table th, table td {
     border: 1px solid #666;
-    padding: 6px;
+    padding: 4px;
+    font-size: 13px;
 }
 
 table th {
     background: #f2f2f2;
+}
+#pseudocodeBox {
+    background: #ffffff;
+    color: #000000;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 14px;
+   
+    border: 1px solid #000000;
+       box-sizing: border-box;
+}
+
+    .code-line { display: block; }
+    .line-text {
+        display: inline-block; /* width follows the content (text length) */
+        white-space: pre; /* preserve indentation */
+        color: black;
+        font-weight: normal;
+        border-radius: 4px;
+        padding: 2px 4px;
+        /* animated left-to-right fill (yellow) */
+        background: linear-gradient(90deg, rgba(255,234,138,1) 0%, rgba(255,234,138,1) 100%);
+        background-size: 0% 100%;
+        background-repeat: no-repeat;
+        transition: background-size 500ms linear, font-weight 150ms;
+    }
+
+    /* active state uses fill animation only; no bolding */
+    .line-text.fill { background-size: 100% 100%; }
+    .line-text.done { background-size: 100% 100%; }
+#pseudocode {
+    font-size: 13.5px;
+    line-height: 20px;
+    white-space: pre-wrap;
+    text-align: left;
+}
+
+/* legacy .highlight-line removed - using .code-line now */
+
+/* New styles for advanced.html integration */
+
+/* Headings */
+h2 {
+    text-align: center;
+    margin: 0 0 12px 0;
+    font-size: 20px;
+}
+
+/* Coin container (used on advanced page) */
+.coin-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* Summary box reuse for both pages */
+.summary-box {
+    padding: 8px;
+    background: #f1faff;
+    border: 1px solid #77a;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+/* Visual classes for greedy/optimal coins */
+.greedy-coin {
+    background: #ffeeba;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #888;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.optimal-coin {
+    background: #c8f7c5;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #888;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Reduce min-height for short viewports (keeps page from overflowing) */
+@media (max-height: 900px) {
+    .main-title { font-size: 22px; }
+    #container { padding: 12px; }
+    /* panels become flexible on short screens to avoid overflow */
+    .panel { height: auto; max-height: calc(100vh - 80px); }
+    .coin { padding: 5px 8px; font-size: 13px; }
+    #remainingAmount { font-size: 16px; }
+}
+
+@media (max-width: 1000px) {
+    #panelRow { flex-direction: column; gap: 16px; align-items: center; }
+    .panel { flex: 0 0 90%; width: 90%; height: auto; margin-top: 0; }
+    .inputBox { width: 100%; }
+}
+
+@media (min-width: 1400px) {
+    #container { max-width: 1400px; }
 }

@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css" />
     <title>Coin Change Problem</title>
   </head>
-  <body>
+  <body class="with-bg">
     <h1 class="main-title">Greedy Algorithms I: Coin Change Problem</h1>
     <div id="mainContainer">
         <div id="container">
@@ -19,7 +19,16 @@
                     <h3>Input</h3>
 
                     <label>Enter Amount (M):</label><br>
-                    <input type="number" id="amount" value="786" class="inputBox"><br><br>
+                    <input type="number" id="amount" value="586" class="inputBox"><br><br>
+
+                    <label>Select Currency System:</label><br>
+<select id="currencySystem" class="inputBox" onchange="applyCurrencySystem()">
+    <option value="indian">Indian Currency (Default)</option>
+    <option value="old_british">Old British Currency </option>
+
+    <option value="custom">Custom</option>
+</select>
+<br><br>
 
                     <label>Denominations (comma separated):</label><br>
                     <input type="text" id="denoms" value="1,2,5,10,20,50,100,200,500,2000" class="inputBox"><br><br>
@@ -39,14 +48,36 @@
 
                     <button class="button" id="nextBtn" onclick="nextStep()" disabled>Next Step</button>
                     <button class="button" id="autoBtn" onclick="autoRun()" disabled>Auto Run</button>
+                                     
+<div id="pseudocodeBox">
+    <h3>Pseudocode </h3>
+    <pre id="pseudocode">
+1. read amount
+2. read denominations array
+3. sort denominations in descending order
+4. for each denomination d in denoms:
+5.     while amount >= d:
+6.         choose coin d
+7.         amount = amount - d
+8.         record coin usage
+9. end
+    </pre>
+</div>
                 </div>
 
                 <!-- RIGHT PANEL -->
                 <div class="panel">
-                    <h3>Output</h3>
+                 
+                    <h3 style="display:flex; justify-content:space-between; align-items:center;">
+    Output
+    <button class="button" id="advancedBtn" onclick="openAdvanced()" disabled>Advanced</button>
+</h3>
+
 
                     <b>Coins Used:</b>
                     <div id="selectedCoins"></div>
+
+ 
 
                     <h4>Summary:</h4>
                     <div id="summary"></div>
@@ -60,3 +91,12 @@
 
   </body>
 </html>
+
+
+
+
+
+
+
+
+
