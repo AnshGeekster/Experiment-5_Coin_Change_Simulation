@@ -7,8 +7,15 @@ let autoInterval = null;
 let startTime = 0;   // For measuring execution time
 let highlightQueue = [];
 let highlightProcessing = false;
-let highlightDelay = 550; // ms between highlighted lines (animation time)
+let highlightDelay = 900; // ms between highlighted lines (animation time) — increased for slower, clearer visuals
 let stepInProgress = false;
+
+// callbacks keyed by pseudocode line number; executed when that line's highlight completes
+let lineCallbacks = {};
+
+// Flags to ensure certain UI updates happen exactly once when pseudocode lines run
+let remainingLoaded = false;
+let coinsLoaded = false;
 
 function enqueueHighlight(lineNumber) {
     highlightQueue.push(lineNumber);
@@ -23,13 +30,48 @@ function processHighlightQueue() {
     highlightProcessing = true;
     const line = highlightQueue.shift();
     highlightLine(line);
+    // Trigger any UI effects that should run in parallel with pseudocode
+    handlePseudoLine(line);
     setTimeout(processHighlightQueue, highlightDelay);
+}
+
+// Called when a pseudocode line is highlighted; triggers UI updates that should run
+// in parallel with the highlighting (e.g., showing Remaining Amount, loading coins)
+function handlePseudoLine(lineNumber) {
+    // Line 1: read amount -> show Remaining Amount
+    if (lineNumber === 1 && !remainingLoaded) {
+        const rem = document.getElementById("remainingAmount");
+        if (rem) rem.innerHTML = "Remaining Amount: " + amount;
+        remainingLoaded = true;
+    }
+
+    // Line 2 or 3: read denominations and sort -> show available coins in descending order
+    if ((lineNumber === 2 || lineNumber === 3) && !coinsLoaded) {
+        // ensure denoms is already set at startSimulation; build UI now
+        buildCoinUI();
+        // subtle animation for coins to appear sequentially
+        const coins = document.querySelectorAll('#coinBox .coin');
+        coins.forEach((c, idx) => {
+            c.style.opacity = '0';
+            c.style.transform = 'translateY(-8px)';
+            setTimeout(() => {
+                // slightly slower transition for clearer appearance
+                c.style.transition = 'opacity 450ms ease, transform 450ms ease';
+                c.style.opacity = '1';
+                c.style.transform = 'translateY(0)';
+            }, idx * 120);
+        });
+
+        coinsLoaded = true;
+    }
 }
 
 function clearHighlightQueue() {
     highlightQueue = [];
     highlightProcessing = false;
     clearAllHighlights();
+    // also reset step-in-progress state (in case clearing while mid-step)
+    stepInProgress = false;
 }
 
 function clearAllHighlights() {
@@ -37,6 +79,16 @@ function clearAllHighlights() {
     if (!pseudo) return;
     const els = pseudo.querySelectorAll('.code-line .line-text');
     els.forEach(e => e.classList.remove('active','fill','done'));
+
+    // hide arrow indicator if present
+    const box = pseudo.parentElement;
+    if (box) {
+        const arrow = box.querySelector('.pseudo-arrow');
+        if (arrow) arrow.classList.remove('visible');
+    }
+
+    // clear any pending callbacks (prevent stray coin additions after reset)
+    lineCallbacks = {};
 }
 
 function initializePseudocode() {
@@ -47,7 +99,45 @@ function initializePseudocode() {
     pre.innerHTML = lines.map((line, i) =>
         `<div class="code-line" data-line="${i+1}"><span class="line-text">${line}</span></div>`
     ).join('');
+
+    // create a single arrow indicator inside the pseudocode box (if not already present)
+    const box = pre.parentElement; // #pseudocodeBox
+    if (box && !box.querySelector('.pseudo-arrow')) {
+        const arrow = document.createElement('div');
+        arrow.className = 'pseudo-arrow';
+        arrow.innerHTML = '➤';
+        box.appendChild(arrow);
+    }
 }
+
+// Move the arrow to the vertical position of a given pseudocode line (1-based index)
+function movePseudoArrow(lineNumber, fast = false) {
+    const pre = document.getElementById('pseudocode');
+    if (!pre) return;
+    const box = pre.parentElement;
+    if (!box) return;
+    const arrow = box.querySelector('.pseudo-arrow');
+    const lines = pre.querySelectorAll('.code-line');
+    const idx = lineNumber - 1;
+    if (!arrow || idx < 0 || idx >= lines.length) return;
+
+    const line = lines[idx];
+    const boxRect = box.getBoundingClientRect();
+    const lineRect = line.getBoundingClientRect();
+    const top = lineRect.top - boxRect.top + (lineRect.height / 2) - (arrow.offsetHeight / 2);
+
+    // use an even shorter duration for loop lines to keep the arrow strictly in sync
+    const duration = fast ? 6 : 80; // 6ms when fast mode is requested (very snappy)
+    arrow.style.transition = `top ${duration}ms cubic-bezier(0.2,0.8,0.2,1), opacity ${duration}ms linear, transform ${duration}ms cubic-bezier(0.2,0.8,0.2,1)`;
+
+    // move with requestAnimationFrame to ensure the browser applies the transition
+    requestAnimationFrame(() => {
+        arrow.style.top = top + 'px';
+        arrow.classList.add('visible');
+    });
+}
+
+
 
 
 // -------------------- PANEL 2: GREEDY VS OPTIMAL DP --------------------
@@ -122,6 +212,13 @@ function runSimulation2() {
     `;
 }
 
+// Register a callback to execute when a particular pseudocode line finishes its highlight
+function registerLineCallback(lineNumber, cb) {
+    lineCallbacks[lineNumber] = lineCallbacks[lineNumber] || [];
+    lineCallbacks[lineNumber].push(cb);
+}
+
+
 // Helper for frequency table
 function buildFreqTable2(arr) {
     let freq = {};
@@ -169,8 +266,11 @@ function highlightLine(lineNumber) {
     if (!txt) return;
 
     // mark as active then trigger fill animation
+    const isLoopLine = (lineNumber >= 6 && lineNumber <= 8);
     line.classList.add('active');
     txt.classList.remove('fill');
+    // move the arrow to this line (use faster speed for loop lines)
+    movePseudoArrow(lineNumber, isLoopLine);
     // small delay to ensure class removal takes effect before adding fill
     setTimeout(() => {
         txt.classList.add('fill');
@@ -180,30 +280,53 @@ function highlightLine(lineNumber) {
     setTimeout(() => {
         txt.classList.add('done');
         line.classList.remove('active');
+
+        // run and clear any callbacks registered for this line (e.g., coin selection after loop iteration)
+        const ln = parseInt(line.dataset.line, 10);
+        if (lineCallbacks[ln] && lineCallbacks[ln].length) {
+            const cbs = lineCallbacks[ln].slice();
+            lineCallbacks[ln] = [];
+            cbs.forEach(cb => {
+                try { cb(); } catch (e) { console.error('line callback error', e); }
+            });
+        }
     }, highlightDelay - 100);
 }
 
 
 function startSimulation() {
-    // Prepare paced highlighting
-    clearHighlightQueue();
-    enqueueHighlight(1);   // reading amount
-    enqueueHighlight(2);
-    enqueueHighlight(3);
-
+    // Read inputs now so that pseudocode-driven UI actions have the data they need
     amount = parseInt(document.getElementById("amount").value);
     originalAmount = amount;
     denoms = document.getElementById("denoms").value
                  .split(",").map(Number).sort((a, b) => b - a);
 
+    // Reset simulation internals
     steps = [];
     currentStep = 0;
 
-    document.getElementById("selectedCoins").innerHTML = "";
-    document.getElementById("summary").innerHTML = "";
-    document.getElementById("remainingAmount").innerHTML = "Remaining Amount: " + amount;
+    // Clear visible outputs but keep "Remaining Amount" blank until line 1 highlights
+    const sel = document.getElementById("selectedCoins");
+    if (sel) sel.innerHTML = "";
+    const sum = document.getElementById("summary");
+    if (sum) sum.innerHTML = "";
+    const rem = document.getElementById("remainingAmount");
+    if (rem) rem.innerHTML = "Remaining Amount: --";
 
-    buildCoinUI();
+    // Clear coin box now (will be populated when pseudocode lines 2/3 run)
+    const box = document.getElementById("coinBox");
+    if (box) box.innerHTML = "";
+
+    // Reset flags so handlePseudoLine will perform the updates once
+    remainingLoaded = false;
+    coinsLoaded = false;
+
+    // Prepare paced highlighting AFTER inputs are read
+    clearHighlightQueue();
+    enqueueHighlight(1);   // reading amount
+    enqueueHighlight(2);
+    enqueueHighlight(3);
+
     precomputeSteps();
 
     document.getElementById("nextBtn").disabled = false;
@@ -246,35 +369,59 @@ function precomputeSteps() {
 }
 
 function nextStep() {
+    // prevent overlapping steps; wait for the current iteration's callback to finish
+    if (stepInProgress) return;
+    stepInProgress = true;
+
     enqueueHighlight(6);  // choosing coin
     enqueueHighlight(7); // subtracting amount
     enqueueHighlight(8); // recording
 
     if (currentStep >= steps.length) {
+        stepInProgress = false;
         finishSimulation();
         return;
     }
 
     let coin = steps[currentStep];
 
-    document.querySelectorAll('.coin').forEach(c => c.classList.remove("highlight"));
-    document.getElementById("coin_" + coin).classList.add("highlight");
-
-    let box = document.getElementById("selectedCoins");
-    let c = document.createElement("div");
-    c.className = "coin highlight";
-    c.innerHTML = coin;
-    box.appendChild(c);
-
-    amount -= coin;
-    document.getElementById("remainingAmount").innerHTML = "Remaining Amount: " + amount;
-
-    currentStep++;
-
-    if (currentStep === steps.length) {
-        finishSimulation();
-          highlightLine(9);
+    // Ensure coin UI exists (in case user clicked Next before pseudocode loaded coins)
+    if (!document.getElementById("coin_" + coin)) {
+        buildCoinUI();
+        coinsLoaded = true; // mark as loaded since we built it here
     }
+
+    // highlight the coin in the available coins box immediately
+    document.querySelectorAll('#coinBox .coin').forEach(c => c.classList.remove("highlight"));
+    const coinEl = document.getElementById("coin_" + coin);
+    if (coinEl) coinEl.classList.add("highlight");
+
+    // register a callback to actually add the coin to the "Coins Used" list
+    // when the loop's recording line (line 8) finishes its highlight
+    registerLineCallback(8, () => {
+        // append coin to selected list
+        let box = document.getElementById("selectedCoins");
+        let c = document.createElement("div");
+        c.className = "coin highlight";
+        c.innerHTML = coin;
+        box.appendChild(c);
+
+        // remove highlight from the coin in coinBox and update remaining amount
+        if (coinEl) coinEl.classList.remove("highlight");
+
+        amount -= coin;
+        const remEl = document.getElementById("remainingAmount");
+        if (remEl) remEl.innerHTML = "Remaining Amount: " + amount;
+        remainingLoaded = true;
+
+        currentStep++;
+        stepInProgress = false;
+
+        if (currentStep === steps.length) {
+            finishSimulation();
+            highlightLine(9);
+        }
+    });
 }
 
 function autoRun() {
@@ -285,12 +432,21 @@ function autoRun() {
         } else {
             nextStep();
         }
-    }, highlightDelay + 100);
+    }, highlightDelay + 200);
 }
 
 function finishSimulation() {
+    // stop any running auto-run
+    if (autoInterval) {
+        clearInterval(autoInterval);
+        autoInterval = null;
+    }
+
     document.getElementById("nextBtn").disabled = true;
     document.getElementById("autoBtn").disabled = true;
+
+    // ensure step state resets
+    stepInProgress = false;
 
     let endTime = performance.now();
     let execTime = (endTime - startTime).toFixed(3);
@@ -415,4 +571,9 @@ function resetAdvanced() {
         const el = document.getElementById(id);
         if (el) el.innerHTML = "";
     });
+
+    // clear any pending callbacks and step state
+    lineCallbacks = {};
+    stepInProgress = false;
+    clearHighlightQueue();
 }

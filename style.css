@@ -73,15 +73,15 @@ body.advanced {
     width: 100%;
     gap: 24px;                  /* slightly larger gap */
     align-items: stretch;       /* equal height panels */
-    max-width: 1200px;
+    max-width: 1400px;
 }
 
 /* Panel Styling - make all panels identical size and larger, but fit viewport */
 .panel {
     background: white;
     padding: 18px;
-    flex: 0 0 360px;            /* fixed width to ensure same size */
-    width: 360px;               /* ensure fixed width */
+    flex: 0 0 420px;            /* fixed width to ensure same size */
+    width: 420px;               /* ensure fixed width */
     border-radius: 10px;
     box-shadow: 0px 0px 12px rgba(0,0,0,0.12);
     height: 520px;              /* fixed height so panels are identical across pages */
@@ -94,8 +94,8 @@ body.advanced {
 
 /* Ensure advanced page panels adopt the same default size as index */
 body.advanced .panel {
-    width: 360px;
-    flex: 0 0 360px;
+    width: 420px;
+    flex: 0 0 420px;
     height: 520px;
 }
 
@@ -225,9 +225,31 @@ table th {
     padding: 12px;
     border-radius: 10px;
     margin-top: 14px;
-   
+
     border: 1px solid #000000;
-       box-sizing: border-box;
+    box-sizing: border-box;
+    position: relative; /* required for absolutely positioned arrow */
+    padding-left: 34px;  /* make room for the arrow */
+}
+
+/* Arrow indicator that moves beside the active pseudocode line */
+.pseudo-arrow {
+    position: absolute;
+    left: 10px;
+    font-size: 16px;
+    color: #ff6b00;
+    line-height: 1;
+    /* faster transition so arrow keeps up with highlighting and coin selection */
+    transition: top 80ms cubic-bezier(0.2,0.8,0.2,1), opacity 80ms linear, transform 80ms cubic-bezier(0.2,0.8,0.2,1);
+    opacity: 0;
+    transform: translateX(-6px);
+    pointer-events: none;
+    will-change: top, transform, opacity; /* hint for smoother animations */
+    backface-visibility: hidden;
+}
+.pseudo-arrow.visible {
+    opacity: 1;
+    transform: translateX(0);
 }
 
     .code-line { display: block; }
