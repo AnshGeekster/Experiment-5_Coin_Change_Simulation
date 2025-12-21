@@ -7,7 +7,7 @@ let autoInterval = null;
 let startTime = 0;   // For measuring execution time
 let highlightQueue = [];
 let highlightProcessing = false;
-let highlightDelay = 900; // ms between highlighted lines (animation time) — increased for slower, clearer visuals
+let highlightDelay = 500; // ms between highlighted lines (animation time) — increased for slower, clearer visuals
 let stepInProgress = false;
 
 // callbacks keyed by pseudocode line number; executed when that line's highlight completes
@@ -32,7 +32,9 @@ function processHighlightQueue() {
     highlightLine(line);
     // Trigger any UI effects that should run in parallel with pseudocode
     handlePseudoLine(line);
-    setTimeout(processHighlightQueue, highlightDelay);
+    const isLoopLine = (line >= 5 && line <= 8);
+setTimeout(processHighlightQueue, isLoopLine ? 250 : highlightDelay);
+
 }
 
 // Called when a pseudocode line is highlighted; triggers UI updates that should run
@@ -432,7 +434,7 @@ function autoRun() {
         } else {
             nextStep();
         }
-    }, highlightDelay + 200);
+    }, highlightDelay + 120);
 }
 
 function finishSimulation() {
