@@ -13,8 +13,9 @@ body {
 
 
 body.with-bg {
-    background: url("./Images/background.jpg") no-repeat center center fixed;
-    background-size: cover; /* preserve aspect ratio and fill screen */
+    background: url("./Images/background.jpg") no-repeat fixed;
+    background-size: cover;
+    background-position: center 1px;
 }
 
 /* Prevent page scroll on advanced page while letting panels scroll internally */
