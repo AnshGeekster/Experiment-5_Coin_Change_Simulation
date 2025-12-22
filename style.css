@@ -93,10 +93,22 @@ body.advanced {
 }
 
 /* Ensure advanced page panels adopt the same default size as index */
-body.advanced .panel {
+body.advanced .panel,
+#advancedSection .panel {
     width: 420px;
     flex: 0 0 420px;
     height: 520px;
+    max-height: calc(100vh - 120px);
+}
+
+/* Make the internal container match the layout properties of #panelRow so panels sizes and alignment match */
+#advancedSection .container {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+    max-width: 1200px;
 }
 
 /* Back button positioned inside the panel at the top-right corner */
