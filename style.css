@@ -13,7 +13,7 @@ body {
 
 
 body.with-bg {
-    background: url("./images/background.jpg") no-repeat center center fixed;
+    background: url("./Images/background.jpg") no-repeat center center fixed;
     background-size: cover; /* preserve aspect ratio and fill screen */
 }
 
