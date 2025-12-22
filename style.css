@@ -11,7 +11,7 @@ body {
     /* no global background here (only on index) */
 }
 
-/* index-specific background */
+
 body.with-bg {
     background: url("./images/background.jpg") no-repeat center center fixed;
     background-size: cover; /* preserve aspect ratio and fill screen */
