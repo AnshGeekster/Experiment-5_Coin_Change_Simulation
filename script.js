@@ -17,6 +17,67 @@ let lineCallbacks = {};
 let remainingLoaded = false;
 let coinsLoaded = false;
 
+
+function validateInputs(amountInput, denomsInput) {
+    // Check if amount is empty or not a number
+    if (!amountInput || isNaN(amountInput) || parseInt(amountInput) <= 0) {
+        alert("Error: Please enter a valid positive amount!");
+        return false;
+    }
+    const amountVal = parseInt(amountInput);
+
+    // Check if denominations are empty
+    if (!denomsInput || denomsInput.trim() === "") {
+        alert("Error: Please enter valid denominations separated by commas!");
+        return false;
+    }
+
+    // Parse denominations
+    let denomsArray = denomsInput.split(",").map(d => Number(d.trim()));
+
+    // Check for non-number or zero/negative denominations
+    if (denomsArray.some(d => isNaN(d) || d <= 0)) {
+        alert("Error: All denominations must be positive numbers!");
+        return false;
+    }
+
+    // Check for duplicates
+    let uniqueDenoms = new Set(denomsArray);
+    if (uniqueDenoms.size !== denomsArray.length) {
+        alert("Error: Duplicate denominations detected! Please enter unique values.");
+        return false;
+    }
+
+    // Check if amount is smaller than smallest denomination
+    const minDenom = Math.min(...denomsArray);
+    if (amountVal < minDenom) {
+        alert(`Error: The entered amount (${amountVal}) is smaller than the smallest denomination (${minDenom}).`);
+        return false;
+    }
+
+    // Check if the amount can actually be formed using these denominations
+    // Small DP array to determine if amount is possible
+    const dp = Array(amountVal + 1).fill(false);
+    dp[0] = true; // 0 can always be made
+
+    for (let i = 1; i <= amountVal; i++) {
+        for (let coin of denomsArray) {
+            if (i - coin >= 0 && dp[i - coin]) {
+                dp[i] = true;
+                break;
+            }
+        }
+    }
+
+    if (!dp[amountVal]) {
+        alert(`Error: The entered amount (${amountVal}) cannot be formed with the given denominations (${denomsArray.join(", ")}). Please adjust your inputs.`);
+        return false;
+    }
+
+    return denomsArray; // valid, return parsed array
+}
+
+
 function enqueueHighlight(lineNumber) {
     highlightQueue.push(lineNumber);
     if (!highlightProcessing) processHighlightQueue();
@@ -144,8 +205,14 @@ function movePseudoArrow(lineNumber, fast = false) {
 
 // -------------------- PANEL 2: GREEDY VS OPTIMAL DP --------------------
 function runSimulation2() {
-    let amount = parseInt(document.getElementById("amount2").value);
-    let denoms = document.getElementById("denoms2").value.split(",").map(Number);
+   const amountInput = document.getElementById("amount2").value;
+    const denomsInput = document.getElementById("denoms2").value;
+
+    const parsedDenoms = validateInputs(amountInput, denomsInput);
+    if (!parsedDenoms) return; // stop execution if invalid
+
+    let amount = parseInt(amountInput);
+    let denoms = parsedDenoms;
 
     if (!amount || denoms.length === 0) {
         alert("Please enter valid inputs!");
@@ -246,13 +313,17 @@ function applyCurrencySystem(currencySelectId = "currencySystem", denomsId = "de
         denomsInput.value = "1,2,5,10,20,50,100,200,500,2000";
     }
     else if (system === "old_british") {
-        // OLD BRITISH CURRENCY 
         denomsInput.value = "1,6,7,12";
     }
     else if (system === "custom") {
         denomsInput.value = "";
         denomsInput.placeholder = "Enter custom denominations...";
     }
+
+    // Extra validation: if user manually types, check input immediately
+    denomsInput.addEventListener("blur", () => {
+        validateInputs("1", denomsInput.value); // dummy amount for checking only denoms
+    });
 }
 
 function highlightLine(lineNumber) {
@@ -297,11 +368,16 @@ function highlightLine(lineNumber) {
 
 
 function startSimulation() {
-    // Read inputs now so that pseudocode-driven UI actions have the data they need
-    amount = parseInt(document.getElementById("amount").value);
+
+    const amountInput = document.getElementById("amount").value;
+    const denomsInput = document.getElementById("denoms").value;
+
+    const parsedDenoms = validateInputs(amountInput, denomsInput);
+    if (!parsedDenoms) return; // stop if invalid inputs
+
+    amount = parseInt(amountInput);
     originalAmount = amount;
-    denoms = document.getElementById("denoms").value
-                 .split(",").map(Number).sort((a, b) => b - a);
+    denoms = parsedDenoms.sort((a, b) => b - a);
 
     // Reset simulation internals
     steps = [];
