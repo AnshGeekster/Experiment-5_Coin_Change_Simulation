@@ -409,8 +409,6 @@ function startSimulation() {
 
     document.getElementById("nextBtn").disabled = false;
     document.getElementById("autoBtn").disabled = false;
-    const advBtn = document.getElementById("advancedBtn");
-    if (advBtn) advBtn.disabled = false;
 
     startTime = performance.now();   // Start time
 }
@@ -566,6 +564,9 @@ function finishSimulation() {
     `;
 
     document.getElementById("summary").innerHTML = summaryHTML;
+
+    const advBtn = document.getElementById("advancedBtn");
+    if (advBtn) advBtn.disabled = false;
 }
 
 function resetAll() {
