@@ -7,7 +7,33 @@ let autoInterval = null;
 let startTime = 0;   // For measuring execution time
 let highlightQueue = [];
 let highlightProcessing = false;
-let highlightDelay = 500; // ms between highlighted lines (animation time) — increased for slower, clearer visuals
+let highlightDelay = 500; // default delay
+let minDelay = 50;  // Fastest speed (ms)
+let maxDelay = 2000; // Slowest speed (ms)
+
+function updateSpeed() {
+    const slider = document.getElementById("speedRange");
+    if (!slider) return;
+
+    // Invert the value: higher slider value (100) -> lower delay (minDelay)
+    // Formula: delay = maxDelay - ( (val - min) / (max - min) ) * (maxDelay - minDelay)
+    // Simplify: val 0-100. 
+    // val 1 -> maxDelay
+    // val 100 -> minDelay
+
+    const val = parseInt(slider.value);
+    const percentage = (val - 1) / 99; // 0 to 1
+
+    // Lerp (Linear Interpolation) inverted
+    // newDelay = maxDelay - (percentage * (maxDelay - minDelay))
+    const newDelay = maxDelay - (percentage * (maxDelay - minDelay));
+
+    highlightDelay = Math.floor(newDelay);
+
+    // Update slider background gradient to show progress/fill
+    const fillPercent = ((val - slider.min) / (slider.max - slider.min)) * 100;
+    slider.style.background = `linear-gradient(to right, #0066ff ${fillPercent}%, #d3d3d3 ${fillPercent}%)`;
+}
 let stepInProgress = false;
 
 // callbacks keyed by pseudocode line number; executed when that line's highlight completes
@@ -93,8 +119,8 @@ function processHighlightQueue() {
     highlightLine(line);
     // Trigger any UI effects that should run in parallel with pseudocode
     handlePseudoLine(line);
-    const isLoopLine = (line >= 5 && line <= 8);
-setTimeout(processHighlightQueue, isLoopLine ? 250 : highlightDelay);
+    // Use highlightDelay for ALL lines so speed slider controls everything consistently
+    setTimeout(processHighlightQueue, highlightDelay);
 
 }
 
@@ -141,7 +167,7 @@ function clearAllHighlights() {
     const pseudo = document.getElementById('pseudocode');
     if (!pseudo) return;
     const els = pseudo.querySelectorAll('.code-line .line-text');
-    els.forEach(e => e.classList.remove('active','fill','done'));
+    els.forEach(e => e.classList.remove('active', 'fill', 'done'));
 
     // hide arrow indicator if present
     const box = pseudo.parentElement;
@@ -158,9 +184,9 @@ function initializePseudocode() {
     const pre = document.getElementById('pseudocode');
     if (!pre) return;
     const text = pre.textContent || pre.innerText || '';
-    const lines = text.replace(/\r/g,'').split('\n');
+    const lines = text.replace(/\r/g, '').split('\n');
     pre.innerHTML = lines.map((line, i) =>
-        `<div class="code-line" data-line="${i+1}"><span class="line-text">${line}</span></div>`
+        `<div class="code-line" data-line="${i + 1}"><span class="line-text">${line}</span></div>`
     ).join('');
 
     // create a single arrow indicator inside the pseudocode box (if not already present)
@@ -205,7 +231,7 @@ function movePseudoArrow(lineNumber, fast = false) {
 
 // -------------------- PANEL 2: GREEDY VS OPTIMAL DP --------------------
 function runSimulation2() {
-   const amountInput = document.getElementById("amount2").value;
+    const amountInput = document.getElementById("amount2").value;
     const denomsInput = document.getElementById("denoms2").value;
 
     const parsedDenoms = validateInputs(amountInput, denomsInput);
@@ -221,7 +247,7 @@ function runSimulation2() {
 
     // Greedy algorithm
     let startGreedy = performance.now();
-    denoms.sort((a,b)=>b-a);
+    denoms.sort((a, b) => b - a);
     let greedyCoins = [];
     let remaining = amount;
     denoms.forEach(coin => {
@@ -234,14 +260,14 @@ function runSimulation2() {
 
     // Optimal DP algorithm
     let startDP = performance.now();
-    let dp = Array(amount+1).fill(Infinity);
-    let parent = Array(amount+1).fill(-1);
+    let dp = Array(amount + 1).fill(Infinity);
+    let parent = Array(amount + 1).fill(-1);
     dp[0] = 0;
 
-    for (let i=1; i<=amount; i++) {
+    for (let i = 1; i <= amount; i++) {
         for (let coin of denoms) {
-            if (i-coin>=0 && dp[i-coin]+1<dp[i]) {
-                dp[i] = dp[i-coin]+1;
+            if (i - coin >= 0 && dp[i - coin] + 1 < dp[i]) {
+                dp[i] = dp[i - coin] + 1;
                 parent[i] = coin;
             }
         }
@@ -256,7 +282,7 @@ function runSimulation2() {
     let dpTime = performance.now() - startDP;
 
     // Populate outputs
-    document.getElementById("greedy-steps2").innerHTML = greedyCoins.map(c=>`<div class='coin greedy-coin'>₹${c}</div>`).join("");
+    document.getElementById("greedy-steps2").innerHTML = greedyCoins.map(c => `<div class='coin greedy-coin'>₹${c}</div>`).join("");
     document.getElementById("greedy-summary2").innerHTML = `
         <b>Total Coins Used:</b> ${greedyCoins.length}<br>
         <b>Execution Time:</b> ${greedyTime.toFixed(3)} ms<br>
@@ -264,7 +290,7 @@ function runSimulation2() {
         ${buildFreqTable2(greedyCoins)}
     `;
 
-    document.getElementById("optimal-container2").innerHTML = optimalCoins.map(c=>`<div class='coin optimal-coin'>₹${c}</div>`).join("");
+    document.getElementById("optimal-container2").innerHTML = optimalCoins.map(c => `<div class='coin optimal-coin'>₹${c}</div>`).join("");
     document.getElementById("optimal-summary2").innerHTML = `
         <b>Total Coins Used:</b> ${optimalCoins.length}<br>
         <b>Execution Time:</b> ${dpTime.toFixed(3)} ms<br>
@@ -277,7 +303,7 @@ function runSimulation2() {
         <b>Greedy Coins:</b> ${greedyCoins.length}<br>
         <b>Optimal Coins:</b> ${optimalCoins.length}<br>
         <b>Efficiency:</b> ${efficiency}%<br>
-        ${efficiency==100? "<span style='color:green'>Greedy is optimal ✔</span>":"<span style='color:red'>Greedy is NOT optimal ✘</span>"}
+        ${efficiency == 100 ? "<span style='color:green'>Greedy is optimal ✔</span>" : "<span style='color:red'>Greedy is NOT optimal ✘</span>"}
     `;
 }
 
@@ -291,7 +317,7 @@ function registerLineCallback(lineNumber, cb) {
 // Helper for frequency table
 function buildFreqTable2(arr) {
     let freq = {};
-    arr.forEach(c => freq[c] = (freq[c] || 0)+1);
+    arr.forEach(c => freq[c] = (freq[c] || 0) + 1);
 
     let html = `<table><tr><th>Coin</th><th>Count</th></tr>`;
     for (let c in freq) {
@@ -372,6 +398,9 @@ function startSimulation() {
     const amountInput = document.getElementById("amount").value;
     const denomsInput = document.getElementById("denoms").value;
 
+    // Sync speed with slider before starting
+    updateSpeed();
+
     const parsedDenoms = validateInputs(amountInput, denomsInput);
     if (!parsedDenoms) return; // stop if invalid inputs
 
@@ -408,6 +437,7 @@ function startSimulation() {
     precomputeSteps();
 
     document.getElementById("nextBtn").disabled = false;
+    document.getElementById("pauseBtn").disabled = true; // only enabled during auto run
     document.getElementById("autoBtn").disabled = false;
 
     startTime = performance.now();   // Start time
@@ -500,26 +530,60 @@ function nextStep() {
     });
 }
 
+function pauseSimulation() {
+    // Clear running flag
+    autoInterval = null;
+
+    // Enable single-step controls
+    document.getElementById("nextBtn").disabled = false;
+    document.getElementById("autoBtn").disabled = false;
+    document.getElementById("pauseBtn").disabled = true;
+
+    // Re-enable Start button on pause
+    const startBtn = document.getElementById("startBtn");
+    if (startBtn) startBtn.disabled = false;
+}
+
 function autoRun() {
-    autoInterval = setInterval(() => {
+    // Disable controls during auto-run
+    document.getElementById("nextBtn").disabled = true;
+    document.getElementById("autoBtn").disabled = true;
+
+    // Disable Start button to prevent interruption
+    const startBtn = document.getElementById("startBtn");
+    if (startBtn) startBtn.disabled = true;
+
+    // Enable Pause
+    document.getElementById("pauseBtn").disabled = false;
+
+    function runLoop() {
+        if (!autoInterval) return; // halted
         if (currentStep >= steps.length) {
-            clearInterval(autoInterval);
+            autoInterval = null; // stop the flag
             finishSimulation();
         } else {
             nextStep();
+            // Reschedule next call based on CURRENT highlightDelay
+            // Adding a small buffer to ensure visual smoothness
+            setTimeout(runLoop, highlightDelay + 120);
         }
-    }, highlightDelay + 120);
+    }
+
+    // Set a flag to indicate running (we use autoInterval variable as a boolean flag now, or dummy id)
+    autoInterval = 1;
+    runLoop();
 }
 
 function finishSimulation() {
-    // stop any running auto-run
-    if (autoInterval) {
-        clearInterval(autoInterval);
-        autoInterval = null;
-    }
+    autoInterval = null;
 
     document.getElementById("nextBtn").disabled = true;
+    document.getElementById("pauseBtn").disabled = true;
     document.getElementById("autoBtn").disabled = true;
+
+    // Re-enable Start button when finished
+    const startBtn = document.getElementById("startBtn");
+    if (startBtn) startBtn.disabled = false;
 
     // ensure step state resets
     stepInProgress = false;
@@ -531,7 +595,7 @@ function finishSimulation() {
     steps.forEach(c => {
         coinCountMap[c] = (coinCountMap[c] || 0) + 1;
     });
-          enqueueHighlight(9);
+    enqueueHighlight(9);
 
     let summaryHTML = `
         <table>
@@ -619,11 +683,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Ensure Next Step, Auto Run and Advanced buttons are disabled initially on index page
     const nextBtn = document.getElementById("nextBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
     const autoBtn = document.getElementById("autoBtn");
     const advBtn = document.getElementById("advancedBtn");
+
     if (nextBtn) nextBtn.disabled = true;
+    if (pauseBtn) pauseBtn.disabled = true;
     if (autoBtn) autoBtn.disabled = true;
     if (advBtn) advBtn.disabled = true;
+
+    // Initialize slider fill
+    updateSpeed();
+
     // initialize pseudocode DOM lines for highlighting
     initializePseudocode();
 });
@@ -646,7 +717,7 @@ function resetAdvanced() {
     if (denomsField) denomsField.value = "1,2,5,10,20,50,100";
 
     // Clear outputs on the advanced page
-    ["greedy-steps2","greedy-summary2","optimal-container2","optimal-summary2","compare-box2"].forEach(id => {
+    ["greedy-steps2", "greedy-summary2", "optimal-container2", "optimal-summary2", "compare-box2"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = "";
     });

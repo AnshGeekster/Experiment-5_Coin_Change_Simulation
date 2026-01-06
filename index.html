@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,56 +11,69 @@
 <body class="with-bg">
 
 
-<!-- ================= MAIN SECTION ================= -->
-<div id="mainSection">
+    <!-- ================= MAIN SECTION ================= -->
+    <div id="mainSection">
 
-    <div id="mainContainer">
-        <div id="container">
+        <div id="mainContainer">
+            <div id="container">
 
-            <div id="panelRow">
+                <div id="panelRow">
 
-                <!-- LEFT PANEL -->
-                <div class="panel">
-                    <h3>Input</h3>
+                    <!-- LEFT PANEL -->
+                    <div class="panel">
+                        <h3>Input</h3>
 
-                    <label>Enter Amount (M):</label><br>
-                    <input type="number" id="amount" value="586" class="inputBox"><br><br>
+                        <label>Enter Amount (M):</label><br>
+                        <input type="number" id="amount" value="586" class="inputBox"><br><br>
 
-                    <label>Select Currency System:</label><br>
-                    <select id="currencySystem" class="inputBox" onchange="applyCurrencySystem()">
-                        <option value="indian">Indian Currency (Default)</option>
-                        <option value="old_british">Old British Currency</option>
-                        <option value="custom">Custom</option>
-                    </select><br><br>
+                        <label>Select Currency System:</label><br>
+                        <select id="currencySystem" class="inputBox" onchange="applyCurrencySystem()">
+                            <option value="indian">Indian Currency (Default)</option>
+                            <option value="old_british">Old British Currency</option>
+                            <option value="custom">Custom</option>
+                        </select><br><br>
 
-                    <label>Denominations (comma separated):</label><br>
-                    <input type="text" id="denoms"
-                        value="1,2,5,10,20,50,100,200,500,2000"
-                        class="inputBox"><br><br>
+                        <label>Denominations (comma separated):</label><br>
+                        <input type="text" id="denoms" value="1,2,5,10,20,50,100,200,500,2000" class="inputBox"><br><br>
 
-                    <button class="button" onclick="startSimulation()">Start Simulation</button>
-                    <button class="button resetBtn" onclick="resetAll()">Reset</button>
-                </div>
+                        <div class="speed-control-container">
+                            <label for="speedRange">Processing Speed:</label>
+                            <div class="range-wrapper">
+                                <span class="speed-label">Slow</span>
+                                <input type="range" id="speedRange" min="1" max="100" value="70" class="slider"
+                                    oninput="updateSpeed()">
+                                <span class="speed-label">Fast</span>
+                            </div>
+                        </div><br>
 
-                <!-- CENTER PANEL -->
-                <div class="panel">
-                    <h3>Processing Panel</h3>
+                        <button class="button" id="startBtn" onclick="startSimulation()">Start Simulation</button>
+                        <button class="button resetBtn" onclick="resetAll()">Reset</button>
+                    </div>
 
-                    <div id="remainingAmount">Remaining Amount: --</div>
+                    <!-- CENTER PANEL -->
+                    <div class="panel">
+                        <h3>Processing Panel</h3>
 
-                    <h4>Available Coins:</h4>
-                    <div class="coin-box" id="coinBox"></div>
+                        <div id="remainingAmount">Remaining Amount: --</div>
 
-                    <button class="button" id="nextBtn" onclick="nextStep()" disabled>
-                        Next Step
-                    </button>
-                    <button class="button" id="autoBtn" onclick="autoRun()" disabled>
-                        Auto Run
-                    </button>
+                        <h4>Available Coins:</h4>
+                        <div class="coin-box" id="coinBox"></div>
 
-                    <div id="pseudocodeBox">
-                        <h3>Pseudocode</h3>
-                        <pre id="pseudocode">
+                        <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                            <button class="button" id="nextBtn" onclick="nextStep()" disabled>
+                                Next Step
+                            </button>
+                            <button class="button" id="pauseBtn" onclick="pauseSimulation()" disabled>
+                                Pause
+                            </button>
+                            <button class="button" id="autoBtn" onclick="autoRun()" disabled>
+                                Auto Run
+                            </button>
+                        </div>
+
+                        <div id="pseudocodeBox">
+                            <h3>Pseudocode</h3>
+                            <pre id="pseudocode">
 1. read amount
 2. read denominations array
 3. sort denominations in descending order
@@ -70,115 +84,113 @@
 8.         record coin usage
 9. end
                         </pre>
+                        </div>
                     </div>
+
+                    <!-- RIGHT PANEL -->
+                    <div class="panel">
+                        <h3 style="display:flex; justify-content:space-between; align-items:center;">
+                            Output
+                            <button class="button" id="advancedBtn" onclick="openAdvanced()" disabled>
+                                Advanced
+                            </button>
+                        </h3>
+
+                        <b>Coins Used:</b>
+                        <div id="selectedCoins"></div>
+
+                        <h4>Summary:</h4>
+                        <div id="summary"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= ADVANCED SECTION ================= -->
+    <div id="advancedSection" style="display:none;">
+
+        <h1 class="main-title">Advanced Analysis: Greedy vs Optimal DP</h1>
+
+        <div id="container">
+            <div class="container">
+
+                <!-- LEFT PANEL -->
+                <div class="panel-left-wrapper">
+                    <div class="panel">
+
+                        <button class="button go-back-btn" onclick="goBack()">Go Back</button>
+
+                        <h3>Inputs</h3>
+
+                        <label>Enter Amount:</label>
+                        <input id="amount2" type="number" class="inputBox" value="586"><br><br>
+
+                        <label>Select Currency System:</label><br>
+                        <select id="currencySystem2" class="inputBox"
+                            onchange="applyCurrencySystem('currencySystem2','denoms2')">
+                            <option value="indian">Indian Currency</option>
+                            <option value="old_british">Old British Currency</option>
+                            <option value="custom">Custom</option>
+                        </select><br><br>
+
+                        <label>Enter Denominations (comma separated):</label>
+                        <input id="denoms2" type="text" value="1,2,5,10,20,50,100" class="inputBox"><br><br>
+
+                        <div style="display:flex; gap:8px;">
+                            <button class="button" onclick="runSimulation2()" style="flex:1;">
+                                Run Simulation
+                            </button>
+                            <button class="button resetBtn" onclick="resetAdvanced()" style="flex:1;">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CENTER PANEL -->
+                <div class="panel">
+                    <h3>Greedy Steps</h3>
+                    <div id="greedy-steps2" class="coin-container"></div>
+
+                    <h3>Greedy Summary</h3>
+                    <div id="greedy-summary2"></div>
                 </div>
 
                 <!-- RIGHT PANEL -->
                 <div class="panel">
-                    <h3 style="display:flex; justify-content:space-between; align-items:center;">
-                        Output
-                        <button class="button" id="advancedBtn"
-                                onclick="openAdvanced()" disabled>
-                            Advanced
-                        </button>
-                    </h3>
+                    <h3>Optimal DP Results</h3>
+                    <div id="optimal-container2" class="coin-container"></div>
 
-                    <b>Coins Used:</b>
-                    <div id="selectedCoins"></div>
+                    <h3>Optimal Summary</h3>
+                    <div id="optimal-summary2"></div>
 
-                    <h4>Summary:</h4>
-                    <div id="summary"></div>
+                    <h3>Efficiency</h3>
+                    <div id="compare-box2" class="summary-box"></div>
                 </div>
 
             </div>
         </div>
-    </div>
-
-</div>
-
-<!-- ================= ADVANCED SECTION ================= -->
-<div id="advancedSection" style="display:none;">
-
-<h1 class="main-title">Advanced Analysis: Greedy vs Optimal DP</h1>
-
-<div id="container">
-    <div class="container">
-
-        <!-- LEFT PANEL -->
-        <div class="panel-left-wrapper">
-            <div class="panel">
-
-                <button class="button go-back-btn" onclick="goBack()">Go Back</button>
-
-                <h3>Inputs</h3>
-
-                <label>Enter Amount:</label>
-                <input id="amount2" type="number" class="inputBox" value="586"><br><br>
-
-                <label>Select Currency System:</label><br>
-                <select id="currencySystem2" class="inputBox"
-                        onchange="applyCurrencySystem('currencySystem2','denoms2')">
-                    <option value="indian">Indian Currency</option>
-                    <option value="old_british">Old British Currency</option>
-                    <option value="custom">Custom</option>
-                </select><br><br>
-
-                <label>Enter Denominations (comma separated):</label>
-                <input id="denoms2" type="text"
-                       value="1,2,5,10,20,50,100"
-                       class="inputBox"><br><br>
-
-                <div style="display:flex; gap:8px;">
-                    <button class="button" onclick="runSimulation2()" style="flex:1;">
-                        Run Simulation
-                    </button>
-                    <button class="button resetBtn" onclick="resetAdvanced()" style="flex:1;">
-                        Reset
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- CENTER PANEL -->
-        <div class="panel">
-            <h3>Greedy Steps</h3>
-            <div id="greedy-steps2" class="coin-container"></div>
-
-            <h3>Greedy Summary</h3>
-            <div id="greedy-summary2"></div>
-        </div>
-
-        <!-- RIGHT PANEL -->
-        <div class="panel">
-            <h3>Optimal DP Results</h3>
-            <div id="optimal-container2" class="coin-container"></div>
-
-            <h3>Optimal Summary</h3>
-            <div id="optimal-summary2"></div>
-
-            <h3>Efficiency</h3>
-            <div id="compare-box2" class="summary-box"></div>
-        </div>
 
     </div>
-</div>
 
-</div>
+    <!-- ================= SCRIPTS ================= -->
+    <script src="script.js"></script>
 
-<!-- ================= SCRIPTS ================= -->
-<script src="script.js"></script>
+    <script>
+        function openAdvanced() {
+            document.getElementById("mainSection").style.display = "none";
+            document.getElementById("advancedSection").style.display = "block";
+        }
 
-<script>
-function openAdvanced() {
-    document.getElementById("mainSection").style.display = "none";
-    document.getElementById("advancedSection").style.display = "block";
-}
-
-function goBack() {
-    document.getElementById("advancedSection").style.display = "none";
-    document.getElementById("mainSection").style.display = "block";
-}
-</script>
+        function goBack() {
+            document.getElementById("advancedSection").style.display = "none";
+            document.getElementById("mainSection").style.display = "block";
+        }
+    </script>
 
 </body>
+
 </html>

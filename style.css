@@ -1,6 +1,7 @@
 /* Pseudocode styling */
 /* Global Page Styling */
-html, body {
+html,
+body {
     height: 100%;
     margin: 0;
 }
@@ -37,7 +38,8 @@ body.advanced {
     font-size: 26px;
     font-weight: 700;
     text-align: center;
-    z-index: 1000;   /* ensures it stays above panels */
+    z-index: 1000;
+    /* ensures it stays above panels */
 }
 
 
@@ -50,7 +52,8 @@ body.advanced {
     /* Remove duplicate background here (keeps body background only) */
     /*background: transparent;*/
     padding: 18px;
-    padding-top: 70px;  /* allow space for .main-title so panels don't overlap header */
+    padding-top: 70px;
+    /* allow space for .main-title so panels don't overlap header */
     box-sizing: border-box;
     max-width: 1400px;
     margin: 0 auto;
@@ -70,10 +73,13 @@ body.advanced {
 /* ROW OF PANELS */
 #panelRow {
     display: flex;
-    justify-content: center;   /* center panels horizontally */
+    justify-content: center;
+    /* center panels horizontally */
     width: 100%;
-    gap: 24px;                  /* slightly larger gap */
-    align-items: stretch;       /* equal height panels */
+    gap: 24px;
+    /* slightly larger gap */
+    align-items: stretch;
+    /* equal height panels */
     max-width: 1400px;
 }
 
@@ -81,16 +87,23 @@ body.advanced {
 .panel {
     background: white;
     padding: 18px;
-    flex: 0 0 420px;            /* fixed width to ensure same size */
-    width: 420px;               /* ensure fixed width */
+    flex: 0 0 420px;
+    /* fixed width to ensure same size */
+    width: 420px;
+    /* ensure fixed width */
     border-radius: 10px;
-    box-shadow: 0px 0px 12px rgba(0,0,0,0.12);
-    height: 520px;              /* fixed height so panels are identical across pages */
-    max-height: calc(100vh - 120px); /* ensure panels fit inside viewport */
-    margin: 0;                  /* remove top margin */
+    box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
+    height: 520px;
+    /* fixed height so panels are identical across pages */
+    max-height: calc(100vh - 120px);
+    /* ensure panels fit inside viewport */
+    margin: 0;
+    /* remove top margin */
     box-sizing: border-box;
-    overflow: auto;             /* enable internal scrolling if content exceeds panel */
-    position: relative;         /* for absolute-positioned elements inside panel */
+    overflow: auto;
+    /* enable internal scrolling if content exceeds panel */
+    position: relative;
+    /* for absolute-positioned elements inside panel */
 }
 
 /* Ensure advanced page panels adopt the same default size as index */
@@ -114,9 +127,12 @@ body.advanced .panel,
 
 /* Back button positioned inside the panel at the top-right corner */
 .go-back-btn {
-    position: absolute;   /* panel has position: relative; anchors this inside panel */
-    top: 8px;             /* inside the panel */
-    right: 8px;           /* inside the panel */
+    position: absolute;
+    /* panel has position: relative; anchors this inside panel */
+    top: 8px;
+    /* inside the panel */
+    right: 8px;
+    /* inside the panel */
     padding: 6px 10px;
     background: #007bff;
     color: white;
@@ -143,6 +159,66 @@ body.advanced .panel,
     padding: 6px;
     border-radius: 6px;
     border: 1px solid #888;
+}
+
+/* Speed Slider Styling */
+.speed-control-container {
+    margin-top: 5px;
+}
+
+.range-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.speed-label {
+    font-size: 12px;
+    color: #555;
+    font-weight: bold;
+}
+
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 5px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.9;
+    transition: opacity .2s;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #0066ff;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s;
+}
+
+.slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+}
+
+.slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #0066ff;
+    cursor: pointer;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    border: none;
 }
 
 /* Buttons */
@@ -223,7 +299,8 @@ table {
     margin-top: 8px;
 }
 
-table th, table td {
+table th,
+table td {
     border: 1px solid #666;
     padding: 4px;
     font-size: 13px;
@@ -232,6 +309,7 @@ table th, table td {
 table th {
     background: #f2f2f2;
 }
+
 #pseudocodeBox {
     background: #ffffff;
     color: #000000;
@@ -241,8 +319,10 @@ table th {
 
     border: 1px solid #000000;
     box-sizing: border-box;
-    position: relative; /* required for absolutely positioned arrow */
-    padding-left: 34px;  /* make room for the arrow */
+    position: relative;
+    /* required for absolutely positioned arrow */
+    padding-left: 34px;
+    /* make room for the arrow */
 }
 
 /* Arrow indicator that moves beside the active pseudocode line */
@@ -253,36 +333,49 @@ table th {
     color: #0bc520;
     line-height: 1;
     /* faster transition so arrow keeps up with highlighting and coin selection */
-    transition: top 80ms cubic-bezier(0.2,0.8,0.2,1), opacity 80ms linear, transform 80ms cubic-bezier(0.2,0.8,0.2,1);
+    transition: top 80ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 80ms linear, transform 80ms cubic-bezier(0.2, 0.8, 0.2, 1);
     opacity: 0;
     transform: translateX(-6px);
     pointer-events: none;
-    will-change: top, transform, opacity; /* hint for smoother animations */
+    will-change: top, transform, opacity;
+    /* hint for smoother animations */
     backface-visibility: hidden;
 }
+
 .pseudo-arrow.visible {
     opacity: 1;
     transform: translateX(0);
 }
 
-    .code-line { display: block; }
-    .line-text {
-        display: inline-block; /* width follows the content (text length) */
-        white-space: pre; /* preserve indentation */
-        color: black;
-        font-weight: normal;
-        border-radius: 4px;
-        padding: 2px 4px;
-        /* animated left-to-right fill (yellow) */
-        background: linear-gradient(90deg, rgba(255,234,138,1) 0%, rgba(255,234,138,1) 100%);
-        background-size: 0% 100%;
-        background-repeat: no-repeat;
-        transition: background-size 500ms linear, font-weight 150ms;
-    }
+.code-line {
+    display: block;
+}
 
-    /* active state uses fill animation only; no bolding */
-    .line-text.fill { background-size: 100% 100%; }
-    .line-text.done { background-size: 100% 100%; }
+.line-text {
+    display: inline-block;
+    /* width follows the content (text length) */
+    white-space: pre;
+    /* preserve indentation */
+    color: black;
+    font-weight: normal;
+    border-radius: 4px;
+    padding: 2px 4px;
+    /* animated left-to-right fill (yellow) */
+    background: linear-gradient(90deg, rgba(255, 234, 138, 1) 0%, rgba(255, 234, 138, 1) 100%);
+    background-size: 0% 100%;
+    background-repeat: no-repeat;
+    transition: background-size 500ms linear, font-weight 150ms;
+}
+
+/* active state uses fill animation only; no bolding */
+.line-text.fill {
+    background-size: 100% 100%;
+}
+
+.line-text.done {
+    background-size: 100% 100%;
+}
+
 #pseudocode {
     font-size: 13.5px;
     line-height: 20px;
@@ -339,20 +432,51 @@ h2 {
 
 /* Reduce min-height for short viewports (keeps page from overflowing) */
 @media (max-height: 900px) {
-    .main-title { font-size: 22px; }
-    #container { padding: 12px; }
+    .main-title {
+        font-size: 22px;
+    }
+
+    #container {
+        padding: 12px;
+    }
+
     /* panels become flexible on short screens to avoid overflow */
-    .panel { height: auto; max-height: calc(100vh - 80px); }
-    .coin { padding: 5px 8px; font-size: 13px; }
-    #remainingAmount { font-size: 16px; }
+    .panel {
+        height: auto;
+        max-height: calc(100vh - 80px);
+    }
+
+    .coin {
+        padding: 5px 8px;
+        font-size: 13px;
+    }
+
+    #remainingAmount {
+        font-size: 16px;
+    }
 }
 
 @media (max-width: 1000px) {
-    #panelRow { flex-direction: column; gap: 16px; align-items: center; }
-    .panel { flex: 0 0 90%; width: 90%; height: auto; margin-top: 0; }
-    .inputBox { width: 100%; }
+    #panelRow {
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+    }
+
+    .panel {
+        flex: 0 0 90%;
+        width: 90%;
+        height: auto;
+        margin-top: 0;
+    }
+
+    .inputBox {
+        width: 100%;
+    }
 }
 
 @media (min-width: 1400px) {
-    #container { max-width: 1400px; }
+    #container {
+        max-width: 1400px;
+    }
 }
