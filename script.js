@@ -335,6 +335,11 @@ function applyCurrencySystem(currencySelectId = "currencySystem", denomsId = "de
 
     const system = systemSelect.value;
 
+    // Infer the corresponding amount input id from the currency selector id.
+    // e.g., 'currencySystem' -> 'amount', 'currencySystem2' -> 'amount2'
+    const amountId = currencySelectId.replace('currencySystem', 'amount');
+    const amountInputField = document.getElementById(amountId);
+
     if (system === "indian") {
         denomsInput.value = "1,2,5,10,20,50,100,200,500,2000";
     }
@@ -344,12 +349,61 @@ function applyCurrencySystem(currencySelectId = "currencySystem", denomsId = "de
     else if (system === "custom") {
         denomsInput.value = "";
         denomsInput.placeholder = "Enter custom denominations...";
+
+        // Also reset the corresponding amount field when selecting custom
+        if (amountInputField) {
+            amountInputField.value = "";
+            amountInputField.placeholder = "Enter amount...";
+            // Reset displayed remaining amount on the main panel if present
+            const rem = document.getElementById('remainingAmount');
+            if (rem) rem.innerHTML = "Remaining Amount: --";
+        }
     }
 
-    // Extra validation: if user manually types, check input immediately
-    denomsInput.addEventListener("blur", () => {
-        validateInputs("1", denomsInput.value); // dummy amount for checking only denoms
-    });
+    // Extra validation: if user manually types, check input on blur.
+    // Use a silent/basic check (no alert) to verify format/positivity/uniqueness.
+    // Only run full `validateInputs` (which shows alerts) if a non-empty amount field exists.
+    denomsInput.onblur = () => {
+        const val = denomsInput.value ? denomsInput.value.trim() : "";
+
+        if (!val) {
+            denomsInput.classList.remove('invalid');
+            denomsInput.title = "";
+            return;
+        }
+
+        const arr = val.split(",").map(d => Number(d.trim()));
+
+        // Basic format checks (silent): numeric & positive
+        if (arr.some(d => isNaN(d) || d <= 0)) {
+            denomsInput.classList.add('invalid');
+            denomsInput.title = "All denominations must be positive numbers separated by commas.";
+            return;
+        }
+
+        // Uniqueness check (silent)
+        if (new Set(arr).size !== arr.length) {
+            denomsInput.classList.add('invalid');
+            denomsInput.title = "Duplicate denominations detected.";
+            return;
+        }
+
+        // If there's an amount field and it has a value, run full validation (this may show alerts when truly needed)
+        if (amountInputField && amountInputField.value) {
+            const parsed = validateInputs(amountInputField.value, denomsInput.value);
+            if (!parsed) {
+                // validateInputs already displays alerts for critical errors; clear any visual invalid state here
+                denomsInput.classList.remove('invalid');
+                denomsInput.title = "";
+            } else {
+                denomsInput.classList.remove('invalid');
+                denomsInput.title = "";
+            }
+        } else {
+            denomsInput.classList.remove('invalid');
+            denomsInput.title = "";
+        }
+    };
 }
 
 function highlightLine(lineNumber) {
@@ -460,17 +514,16 @@ function precomputeSteps() {
     // Queue checking denomination highlight once
     enqueueHighlight(4);
 
+    // Efficiently compute how many times each denomination will be used
+    // instead of iterating one-by-one which can be slow for large amounts.
     let temp = amount;
-    let i = 0;
-    while (temp > 0) {
-        if (denoms[i] <= temp) {
-            // highlight the while-condition when we take a coin
-            enqueueHighlight(5);
-            steps.push(denoms[i]);
-            temp -= denoms[i];
-        } else {
-            i++;
+    for (let i = 0; i < denoms.length && temp > 0; i++) {
+        const coin = denoms[i];
+        const count = Math.floor(temp / coin);
+        for (let k = 0; k < count; k++) {
+            steps.push(coin);
         }
+        temp -= count * coin;
     }
 }
 
@@ -479,6 +532,8 @@ function nextStep() {
     if (stepInProgress) return;
     stepInProgress = true;
 
+    // Highlight the loop 'while amount >= d' before choosing/subtracting/recording
+    enqueueHighlight(5);
     enqueueHighlight(6);  // choosing coin
     enqueueHighlight(7); // subtracting amount
     enqueueHighlight(8); // recording
