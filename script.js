@@ -10,6 +10,17 @@ let highlightProcessing = false;
 let highlightDelay = 500; // default delay
 let minDelay = 50;  // Fastest speed (ms)
 let maxDelay = 2000; // Slowest speed (ms)
+document.addEventListener("click", (e) => {
+    const guide = document.getElementById("startGuide");
+    if (!guide) return;
+
+    if (
+        e.target.id === "nextBtn" ||
+        e.target.id === "autoBtn"
+    ) {
+        guide.classList.remove("show");
+    }
+});
 
 function updateSpeed() {
     const slider = document.getElementById("speedRange");
@@ -51,6 +62,12 @@ function validateInputs(amountInput, denomsInput) {
         return false;
     }
     const amountVal = parseInt(amountInput);
+
+    // Check if amount exceeds 1 crore (10^7)
+    if (amountVal > 10000000) {
+        alert("Enter a value upto 10^7 for smooth execution.");
+        return false;
+    }
 
     // Check if denominations are empty
     if (!denomsInput || denomsInput.trim() === "") {
@@ -448,6 +465,11 @@ function highlightLine(lineNumber) {
 
 
 function startSimulation() {
+     const guide = document.getElementById("startGuide");
+    if (guide) {
+        guide.classList.add("show");
+    }
+
 
     const amountInput = document.getElementById("amount").value;
     const denomsInput = document.getElementById("denoms").value;

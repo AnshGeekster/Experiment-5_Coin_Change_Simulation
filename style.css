@@ -480,3 +480,31 @@ h2 {
         max-width: 1400px;
     }
 }
+
+.start-guide {
+    position: fixed;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    background: #1f2933;
+    color: #ffffff;
+
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    z-index: 9999;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.start-guide.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(-8px);
+}
