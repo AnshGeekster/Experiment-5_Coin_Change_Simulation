@@ -1,3 +1,37 @@
+function previousStep() {
+    if (stepInProgress) return;
+    if (currentStep <= 0) return;
+    stepInProgress = true;
+
+    // Remove last coin from selectedCoins
+    let box = document.getElementById("selectedCoins");
+    if (box && box.lastChild) {
+        box.removeChild(box.lastChild);
+    }
+
+    // Restore amount
+    currentStep--;
+    let coin = steps[currentStep];
+    amount += coin;
+    const remEl = document.getElementById("remainingAmount");
+    if (remEl) remEl.innerHTML = "Remaining Amount: " + amount;
+    try { popLastLog(); } catch (e) { }
+
+    // Remove highlight from all coins
+    document.querySelectorAll('#coinBox .coin').forEach(c => c.classList.remove("highlight"));
+
+    // Optionally highlight the coin just undone
+    const coinEl = document.getElementById("coin_" + coin);
+    if (coinEl) coinEl.classList.add("highlight");
+
+    // Enable/disable buttons as needed
+    document.getElementById("nextBtn").disabled = false;
+    document.getElementById("autoBtn").disabled = false;
+    document.getElementById("pauseBtn").disabled = true;
+    document.getElementById("prevBtn").disabled = (currentStep === 0);
+
+    stepInProgress = false;
+}
 let amount = 0;
 let originalAmount = 0;
 let denoms = [];
@@ -46,6 +80,40 @@ function updateSpeed() {
     slider.style.background = `linear-gradient(to right, #0066ff ${fillPercent}%, #d3d3d3 ${fillPercent}%)`;
 }
 let stepInProgress = false;
+
+// Execution logs utilities: append, clear, toggle
+function logExecution(message) {
+    try {
+        const box = document.getElementById('execLogs');
+        if (!box) return;
+        const time = new Date().toLocaleTimeString();
+        const div = document.createElement('div');
+        div.className = 'exec-log-entry';
+        div.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    } catch (e) {
+        console.error('logExecution error', e);
+    }
+}
+
+function clearExecutionLogs() {
+    const box = document.getElementById('execLogs');
+    if (box) box.innerHTML = '';
+}
+
+function toggleExecPanel() {
+    const box = document.getElementById('execLogs');
+    if (!box) return;
+    box.style.display = (box.style.display === 'none') ? 'block' : 'none';
+}
+
+// Remove (pop) the last execution log entry — used when user steps back
+function popLastLog() {
+    const box = document.getElementById('execLogs');
+    if (!box) return;
+    if (box.lastElementChild) box.removeChild(box.lastElementChild);
+}
 
 // callbacks keyed by pseudocode line number; executed when that line's highlight completes
 let lineCallbacks = {};
@@ -144,11 +212,23 @@ function processHighlightQueue() {
 // Called when a pseudocode line is highlighted; triggers UI updates that should run
 // in parallel with the highlighting (e.g., showing Remaining Amount, loading coins)
 function handlePseudoLine(lineNumber) {
+    // Log the pseudocode line (grab text if available)
+    try {
+        const pre = document.getElementById('pseudocode');
+        let linedesc = '';
+        if (pre) {
+            const lt = pre.querySelector(`.code-line[data-line="${lineNumber}"] .line-text`);
+            linedesc = lt ? lt.innerText.trim() : '';
+        }
+        logExecution(`Pseudocode ${lineNumber}: ${linedesc}`);
+    } catch (e) { /* ignore logging errors */ }
+
     // Line 1: read amount -> show Remaining Amount
     if (lineNumber === 1 && !remainingLoaded) {
         const rem = document.getElementById("remainingAmount");
         if (rem) rem.innerHTML = "Remaining Amount: " + amount;
         remainingLoaded = true;
+        logExecution(`Read amount: ${amount} — displayed as Remaining Amount`);
     }
 
     // Line 2 or 3: read denominations and sort -> show available coins in descending order
@@ -169,6 +249,7 @@ function handlePseudoLine(lineNumber) {
         });
 
         coinsLoaded = true;
+        try { logExecution(`Loaded available coins: ${denoms.join(', ')}`); } catch (e) { }
     }
 }
 
@@ -246,83 +327,7 @@ function movePseudoArrow(lineNumber, fast = false) {
 
 
 
-// -------------------- PANEL 2: GREEDY VS OPTIMAL DP --------------------
-function runSimulation2() {
-    const amountInput = document.getElementById("amount2").value;
-    const denomsInput = document.getElementById("denoms2").value;
-
-    const parsedDenoms = validateInputs(amountInput, denomsInput);
-    if (!parsedDenoms) return; // stop execution if invalid
-
-    let amount = parseInt(amountInput);
-    let denoms = parsedDenoms;
-
-    if (!amount || denoms.length === 0) {
-        alert("Please enter valid inputs!");
-        return;
-    }
-
-    // Greedy algorithm
-    let startGreedy = performance.now();
-    denoms.sort((a, b) => b - a);
-    let greedyCoins = [];
-    let remaining = amount;
-    denoms.forEach(coin => {
-        while (remaining >= coin) {
-            greedyCoins.push(coin);
-            remaining -= coin;
-        }
-    });
-    let greedyTime = performance.now() - startGreedy;
-
-    // Optimal DP algorithm
-    let startDP = performance.now();
-    let dp = Array(amount + 1).fill(Infinity);
-    let parent = Array(amount + 1).fill(-1);
-    dp[0] = 0;
-
-    for (let i = 1; i <= amount; i++) {
-        for (let coin of denoms) {
-            if (i - coin >= 0 && dp[i - coin] + 1 < dp[i]) {
-                dp[i] = dp[i - coin] + 1;
-                parent[i] = coin;
-            }
-        }
-    }
-
-    let optimalCoins = [];
-    let curr = amount;
-    while (curr > 0) {
-        optimalCoins.push(parent[curr]);
-        curr -= parent[curr];
-    }
-    let dpTime = performance.now() - startDP;
-
-    // Populate outputs
-    document.getElementById("greedy-steps2").innerHTML = greedyCoins.map(c => `<div class='coin greedy-coin'>₹${c}</div>`).join("");
-    document.getElementById("greedy-summary2").innerHTML = `
-        <b>Total Coins Used:</b> ${greedyCoins.length}<br>
-        <b>Execution Time:</b> ${greedyTime.toFixed(3)} ms<br>
-        <h4>Frequency Table</h4>
-        ${buildFreqTable2(greedyCoins)}
-    `;
-
-    document.getElementById("optimal-container2").innerHTML = optimalCoins.map(c => `<div class='coin optimal-coin'>₹${c}</div>`).join("");
-    document.getElementById("optimal-summary2").innerHTML = `
-        <b>Total Coins Used:</b> ${optimalCoins.length}<br>
-        <b>Execution Time:</b> ${dpTime.toFixed(3)} ms<br>
-        <h4>Frequency Table</h4>
-        ${buildFreqTable2(optimalCoins)}
-    `;
-
-    let efficiency = (optimalCoins.length / greedyCoins.length * 100).toFixed(2);
-    document.getElementById("compare-box2").innerHTML = `
-        <b>Greedy Coins:</b> ${greedyCoins.length}<br>
-        <b>Optimal Coins:</b> ${optimalCoins.length}<br>
-        <b>Efficiency:</b> ${efficiency}%<br>
-        ${efficiency == 100 ? "<span style='color:green'>Greedy is optimal ✔</span>" : "<span style='color:red'>Greedy is NOT optimal ✘</span>"}
-    `;
-}
+// Advanced comparison page removed.
 
 // Register a callback to execute when a particular pseudocode line finishes its highlight
 function registerLineCallback(lineNumber, cb) {
@@ -332,17 +337,7 @@ function registerLineCallback(lineNumber, cb) {
 
 
 // Helper for frequency table
-function buildFreqTable2(arr) {
-    let freq = {};
-    arr.forEach(c => freq[c] = (freq[c] || 0) + 1);
-
-    let html = `<table><tr><th>Coin</th><th>Count</th></tr>`;
-    for (let c in freq) {
-        html += `<tr><td>₹${c}</td><td>${freq[c]}</td></tr>`;
-    }
-    html += `</table>`;
-    return html;
-}
+// buildFreqTable2 removed with advanced page.
 
 
 function applyCurrencySystem(currencySelectId = "currencySystem", denomsId = "denoms") {
@@ -435,32 +430,66 @@ function highlightLine(lineNumber) {
     const txt = line.querySelector('.line-text');
     if (!txt) return;
 
-    // mark as active then trigger fill animation
-    const isLoopLine = (lineNumber >= 6 && lineNumber <= 8);
-    line.classList.add('active');
-    txt.classList.remove('fill');
-    // move the arrow to this line (use faster speed for loop lines)
-    movePseudoArrow(lineNumber, isLoopLine);
-    // small delay to ensure class removal takes effect before adding fill
-    setTimeout(() => {
-        txt.classList.add('fill');
-    }, 20);
+    // Determine loop vs one-time lines
+    const isLoopLine = (lineNumber >= 5 && lineNumber <= 8);
+    const isOneTimeLine = (lineNumber >= 1 && lineNumber <= 4);
 
-    // after the animation completes, mark as done so it stays filled
+    // Move arrow (always)
+    movePseudoArrow(lineNumber, isLoopLine);
+
+    if (isOneTimeLine) {
+        // For lines 1-4: mark permanently as done once highlighted
+        txt.classList.add('done');
+        // run callbacks after a short delay to preserve timing
+        setTimeout(() => {
+            const ln = parseInt(line.dataset.line, 10);
+            if (lineCallbacks[ln] && lineCallbacks[ln].length) {
+                const cbs = lineCallbacks[ln].slice();
+                lineCallbacks[ln] = [];
+                cbs.forEach(cb => { try { cb(); } catch (e) { console.error('line callback error', e); } });
+            }
+        }, Math.max(80, highlightDelay - 200));
+        return;
+    }
+
+    if (isLoopLine) {
+        // Toggle highlight among loop lines (5-8)
+        // remove loop-active from any other loop line
+        const loopLines = pseudo.querySelectorAll('.code-line');
+        loopLines.forEach(l => {
+            const lt = l.querySelector('.line-text');
+            if (!lt) return;
+            const ln = parseInt(l.dataset.line, 10);
+            if (ln >= 5 && ln <= 8 && ln !== lineNumber) lt.classList.remove('loop-active');
+        });
+
+        // activate current loop line visually
+        txt.classList.add('loop-active');
+
+        // run callbacks after highlightDelay/2 to make UI feel responsive
+        setTimeout(() => {
+            const ln = parseInt(line.dataset.line, 10);
+            if (lineCallbacks[ln] && lineCallbacks[ln].length) {
+                const cbs = lineCallbacks[ln].slice();
+                lineCallbacks[ln] = [];
+                cbs.forEach(cb => { try { cb(); } catch (e) { console.error('line callback error', e); } });
+            }
+        }, Math.floor(Math.max(80, highlightDelay / 2)));
+        return;
+    }
+
+    // Fallback for other lines: briefly show as loop-active then mark done
+    txt.classList.add('loop-active');
     setTimeout(() => {
         txt.classList.add('done');
-        line.classList.remove('active');
-
-        // run and clear any callbacks registered for this line (e.g., coin selection after loop iteration)
+        txt.classList.remove('loop-active');
         const ln = parseInt(line.dataset.line, 10);
         if (lineCallbacks[ln] && lineCallbacks[ln].length) {
             const cbs = lineCallbacks[ln].slice();
             lineCallbacks[ln] = [];
-            cbs.forEach(cb => {
-                try { cb(); } catch (e) { console.error('line callback error', e); }
-            });
+            cbs.forEach(cb => { try { cb(); } catch (e) { console.error('line callback error', e); } });
         }
-    }, highlightDelay - 100);
+    }, Math.max(80, highlightDelay - 100));
 }
 
 
@@ -483,6 +512,10 @@ function startSimulation() {
     amount = parseInt(amountInput);
     originalAmount = amount;
     denoms = parsedDenoms.sort((a, b) => b - a);
+
+    // reset logs for a fresh run and record starting state
+    clearExecutionLogs();
+    logExecution(`Simulation started — amount: ${amount}; denominations: ${denoms.join(', ')}`);
 
     // Reset simulation internals
     steps = [];
@@ -553,6 +586,9 @@ function nextStep() {
     // prevent overlapping steps; wait for the current iteration's callback to finish
     if (stepInProgress) return;
     stepInProgress = true;
+    // Keep Previous disabled during auto-run; enable only for manual stepping
+    const prevBtn = document.getElementById("prevBtn");
+    if (prevBtn) prevBtn.disabled = !!autoInterval;
 
     // Highlight the loop 'while amount >= d' before choosing/subtracting/recording
     enqueueHighlight(5);
@@ -563,6 +599,8 @@ function nextStep() {
     if (currentStep >= steps.length) {
         stepInProgress = false;
         finishSimulation();
+        document.getElementById("nextBtn").disabled = true;
+        document.getElementById("autoBtn").disabled = true;
         return;
     }
 
@@ -595,14 +633,20 @@ function nextStep() {
         amount -= coin;
         const remEl = document.getElementById("remainingAmount");
         if (remEl) remEl.innerHTML = "Remaining Amount: " + amount;
+        // log the recorded coin and new remaining amount
+        try { logExecution(`Recorded coin ${coin}. New remaining amount: ${amount}`); } catch (e) { }
         remainingLoaded = true;
 
         currentStep++;
         stepInProgress = false;
-
+        // If auto-run is active, keep Previous disabled; otherwise enable based on step
+        const prevBtn2 = document.getElementById("prevBtn");
+        if (prevBtn2) prevBtn2.disabled = autoInterval ? true : (currentStep === 0);
         if (currentStep === steps.length) {
             finishSimulation();
             highlightLine(9);
+            document.getElementById("nextBtn").disabled = true;
+            document.getElementById("autoBtn").disabled = true;
         }
     });
 }
@@ -613,6 +657,7 @@ function pauseSimulation() {
 
     // Enable single-step controls
     document.getElementById("nextBtn").disabled = false;
+    document.getElementById("prevBtn").disabled = true;
     document.getElementById("autoBtn").disabled = false;
     document.getElementById("pauseBtn").disabled = true;
 
@@ -632,6 +677,10 @@ function autoRun() {
 
     // Enable Pause
     document.getElementById("pauseBtn").disabled = false;
+
+    // Keep Previous disabled while auto-running
+    const prev = document.getElementById("prevBtn");
+    if (prev) prev.disabled = true;
 
     function runLoop() {
         if (!autoInterval) return; // halted
@@ -706,8 +755,7 @@ function finishSimulation() {
 
     document.getElementById("summary").innerHTML = summaryHTML;
 
-    const advBtn = document.getElementById("advancedBtn");
-    if (advBtn) advBtn.disabled = false;
+    try { logExecution(`Simulation finished. Total coins used: ${totalCoins}. Execution time: ${execTime} ms`); } catch (e) { }
 }
 
 function resetAll() {
@@ -715,59 +763,20 @@ function resetAll() {
 }
 
 // Open advanced page with current inputs as URL params
-function openAdvanced() {
-    const amount = document.getElementById("amount").value;
-    const denoms = document.getElementById("denoms").value;
-
-    if (!amount || !denoms) {
-        alert("Please enter amount and denominations first!");
-        return;
-    }
-
-    const params = new URLSearchParams();
-    params.set("amount", amount);
-    params.set("denoms", denoms);
-
-    window.open("advanced.html?" + params.toString(), "_blank");
-}
-
-// Go back to index (used by advanced page)
-function goBack() {
-    window.location.href = "index.html";
-}
-
-// Prefill advanced page inputs using URL parameters (if any)
-function prefillAdvancedParams() {
-    const aField = document.getElementById("amount2");
-    const dField = document.getElementById("denoms2");
-    if (!aField && !dField) return; // nothing to do when not on advanced page
-
-    const p = new URLSearchParams(window.location.search);
-    const a = p.get("amount");
-    const d = p.get("denoms");
-    if (a) aField.value = a;
-    if (d) dField.value = d;
-}
+// Advanced page and related navigation removed from the UI.
 
 
 
 // DOM-ready initializer: run prefill on pages that have advanced inputs
 document.addEventListener("DOMContentLoaded", () => {
-    // Only attempt to prefill when advanced page elements exist
-    if (document.getElementById("amount2") || document.getElementById("denoms2")) {
-        prefillAdvancedParams();
-    }
-
-    // Ensure Next Step, Auto Run and Advanced buttons are disabled initially on index page
+    // Ensure Next Step, Auto Run buttons are disabled initially on index page
     const nextBtn = document.getElementById("nextBtn");
     const pauseBtn = document.getElementById("pauseBtn");
     const autoBtn = document.getElementById("autoBtn");
-    const advBtn = document.getElementById("advancedBtn");
 
     if (nextBtn) nextBtn.disabled = true;
     if (pauseBtn) pauseBtn.disabled = true;
     if (autoBtn) autoBtn.disabled = true;
-    if (advBtn) advBtn.disabled = true;
 
     // Initialize slider fill
     updateSpeed();
@@ -776,31 +785,4 @@ document.addEventListener("DOMContentLoaded", () => {
     initializePseudocode();
 });
 
-function resetAdvanced() {
-    // Stop any interval and clear simulation state
-    if (autoInterval) {
-        clearInterval(autoInterval);
-        autoInterval = null;
-    }
-    currentStep = 0;
-    steps = [];
-    amount = 0;
-    originalAmount = 0;
-
-    // Reset inputs (use a reasonable default for denominations)
-    const amountField = document.getElementById("amount2");
-    const denomsField = document.getElementById("denoms2");
-    if (amountField) amountField.value = "";
-    if (denomsField) denomsField.value = "1,2,5,10,20,50,100";
-
-    // Clear outputs on the advanced page
-    ["greedy-steps2", "greedy-summary2", "optimal-container2", "optimal-summary2", "compare-box2"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = "";
-    });
-
-    // clear any pending callbacks and step state
-    lineCallbacks = {};
-    stepInProgress = false;
-    clearHighlightQueue();
-}
+// Advanced reset removed (advanced UI no longer present).

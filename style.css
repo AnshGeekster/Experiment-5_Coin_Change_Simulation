@@ -14,7 +14,6 @@ body {
 
 
 body.with-bg {
-    background: url("./Images/background.jpg") no-repeat fixed;
     background-size: cover;
     background-position: center 1px;
 }
@@ -92,7 +91,7 @@ body.advanced {
     width: 420px;
     /* ensure fixed width */
     border-radius: 10px;
-    box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.25), 0px 4px 8px rgba(0, 0, 0, 0.2), 0px 2px 4px rgba(0, 0, 0, 0.15);
     height: 520px;
     /* fixed height so panels are identical across pages */
     max-height: calc(100vh - 120px);
@@ -356,24 +355,33 @@ table th {
     /* width follows the content (text length) */
     white-space: pre;
     /* preserve indentation */
-    color: black;
+    color: #111; /* default text color */
     font-weight: normal;
     border-radius: 4px;
     padding: 2px 4px;
-    /* animated left-to-right fill (yellow) */
-    background: linear-gradient(90deg, rgba(255, 234, 138, 1) 0%, rgba(255, 234, 138, 1) 100%);
-    background-size: 0% 100%;
-    background-repeat: no-repeat;
-    transition: background-size 500ms linear, font-weight 150ms;
+    transition: color 180ms ease, font-weight 150ms;
 }
 
-/* active state uses fill animation only; no bolding */
-.line-text.fill {
-    background-size: 100% 100%;
-}
-
+/* Permanent highlight for lines that run once (1-4) */
 .line-text.done {
-    background-size: 100% 100%;
+    color: #ff3300; /* bright red-orange for strong contrast */
+    font-weight: 800;
+}
+
+/* Active loop-line highlight (toggles between lines 5-8) */
+.line-text.loop-active {
+    color: #ff3300; /* bright red-orange to catch attention */
+    font-weight: 800;
+}
+
+/* Dark mode: use violet highlight so it stands out on dark backgrounds */
+@media (prefers-color-scheme: dark) {
+    .line-text.done {
+        color: #ff5533; /* bright orange-red for dark mode */
+    }
+    .line-text.loop-active {
+        color: #ff5533; /* bright orange-red for dark mode */
+    }
 }
 
 #pseudocode {
@@ -409,6 +417,30 @@ h2 {
     border: 1px solid #77a;
     border-radius: 8px;
     margin-top: 8px;
+}
+
+/* Execution logs box */
+.exec-logs-box {
+    background: #0f1720;
+    color: #e6eef8;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    height: 160px;
+    overflow: auto;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.exec-log-entry {
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+}
+.exec-log-entry .log-time {
+    color: #93c5fd;
+    margin-right: 8px;
+    font-weight: 600;
 }
 
 /* Visual classes for greedy/optimal coins */
@@ -507,4 +539,48 @@ h2 {
     opacity: 1;
     pointer-events: auto;
     transform: translateX(-50%) translateY(-8px);
+}
+
+/* Top navigation (Procedure / Posttest) centered within page width */
+.top-nav {
+    position: fixed;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 48px);
+    max-width: 1400px;
+    z-index: 1300;
+    pointer-events: none; /* allow children to control interaction */
+}
+.top-nav-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: auto; /* enable clicks inside */
+}
+.nav-btn {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.10);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1;
+    min-width: 84px;
+    text-align: center;
+}
+.nav-left { background: #0066ff; }
+.nav-right { background: #10b981; }
+
+/* Prevent overlap on narrow viewports: collapse to smaller buttons and keep inside padding */
+@media (max-width: 760px) {
+    .top-nav { width: calc(100% - 24px); top: 6px; }
+    .nav-btn { padding: 5px 8px; font-size: 12px; min-width: 72px; }
+}
+
+@media (max-width: 420px) {
+    .top-nav-inner { gap: 8px; }
+    .nav-left, .nav-right { padding: 4px 6px; font-size: 11px; min-width: 64px; }
 }
